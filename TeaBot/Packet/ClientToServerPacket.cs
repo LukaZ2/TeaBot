@@ -30,11 +30,7 @@ namespace TeaBot.Packet
 
         public byte[] CompressIfPossible(int threshold)
         {
-            byte[] result = new byte[1];
-
-
-
-            return result;
+            return new byte[0];
         }
 
         public abstract int Id();
