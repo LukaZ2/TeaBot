@@ -19,18 +19,27 @@ namespace TeaBot.Packet
         }
         public byte[] GetPacket()
         {
-            byte[] packet = TeaBot.Concat(TeaBot.GetVarInt(Id()),data.ToArray());
-            return TeaBot.Concat(TeaBot.GetVarInt(packet.Length), packet);
-        }
-
-        public byte[] GetPacketRaw()
-        {
-            return TeaBot.Concat(TeaBot.GetVarInt(Id()), data.ToArray());
+            return TeaBot.Concat(TeaBot.GetVarInt(Id()),data.ToArray());
         }
 
         public byte[] CompressIfPossible(int threshold)
         {
-            return new byte[0];
+            if(threshold < 0)
+            {
+                byte[] packet = GetPacket();
+                return TeaBot.Concat(TeaBot.GetVarInt(packet.Length), packet);
+            }
+            byte[] data = GetPacket();
+            if(data.Length < threshold)
+            {
+                byte[] uncompressedLenght = TeaBot.GetVarInt(TeaBot.GetVarInt(0).Length
+                    + data.Length);
+                return TeaBot.Concat(uncompressedLenght,TeaBot.GetVarInt(0) , data);
+            }
+            byte[] dataLenght = TeaBot.GetVarInt(data.Length);
+            byte[] compressed = TeaBot.Compress(data);
+            byte[] packetLenght = TeaBot.GetVarInt(dataLenght.Length + compressed.Length);
+            return TeaBot.Concat(packetLenght, dataLenght, compressed);
         }
 
         public abstract int Id();
