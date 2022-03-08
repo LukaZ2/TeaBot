@@ -28,11 +28,38 @@ namespace TeaBot.Client
             while(true)
             {
                 int lenght = client.ReadVarInt();
-                int packetIdLenght;
-                int packetId = client.ReadVarInt(out packetIdLenght);
-                byte[] packetData = client.ReadBytes(lenght-packetIdLenght);
-                HandlePacket(packetId, packetData);
+                byte[] packet = client.ReadBytes(lenght);
+                if(client.compressionThreshold < 0)
+                {
+                    HandleUncompressed(packet);
+                }
+                else
+                {
+                    HandleCompressed(packet);
+                }
             }
+        }
+
+        private void HandleCompressed(byte[] packet)
+        {
+            Queue<byte> dataQueue = new Queue<byte>(packet);
+            int dataLenght = TeaBot.ReadNextVarInt(dataQueue);
+            byte[] decompressedPacket;
+            if (dataLenght != 0)
+                decompressedPacket = TeaBot.Decompress(dataQueue.ToArray());
+            else
+                decompressedPacket = dataQueue.ToArray();
+            Queue<byte> decompressedDataQueue = new Queue<byte>(decompressedPacket);
+            int packetId = TeaBot.ReadNextVarInt(decompressedDataQueue);
+            HandlePacket(packetId, decompressedDataQueue.ToArray());
+        }
+
+        private void HandleUncompressed(byte[] packet)
+        {
+            Queue<byte> dataQueue = new Queue<byte>(packet);
+            int packetId = TeaBot.ReadNextVarInt(dataQueue);
+            byte[] data = dataQueue.ToArray();
+            HandlePacket(packetId, data);
         }
 
         private void HandlePacket(int packetId, byte[] data)

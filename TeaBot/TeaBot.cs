@@ -96,5 +96,10 @@ namespace TeaBot
             //
             return data;
         }
+
+        public static byte[] Decompress(byte[] data)
+        {
+            return data;
+        }
     }
 }
